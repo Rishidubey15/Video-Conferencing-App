@@ -6,6 +6,7 @@ import "@fontsource/plus-jakarta-sans";
 import "@fontsource/roboto";
 import { AuthProvider } from "./contexts/AuthContext";
 import VideoMeetComponent from "./pages/videoMeet";
+import HomeComponent from "./pages/home";
 
 function App() {
   return (
@@ -18,8 +19,10 @@ function App() {
             <Route path="/auth" element={<Authentication />}>
               {" "}
             </Route>
+            
+            <Route path="/home" element={<HomeComponent />} />
 
-            <Route path='/:url' element={<VideoMeetComponent />} />
+            <Route path="/:url" element={<VideoMeetComponent />} />
           </Routes>
         </AuthProvider>
       </Router>

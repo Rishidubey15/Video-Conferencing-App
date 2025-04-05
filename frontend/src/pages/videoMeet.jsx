@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import {useNavigate} from "react-router-dom"
 import io from "socket.io-client";
 import { Badge, IconButton, TextField } from "@mui/material";
 import { Button } from "@mui/material";
@@ -175,7 +176,7 @@ export default function VideoMeetComponent() {
     if (video && videoAvailable && audio && audioAvailable) {
       navigator.mediaDevices
         .getUserMedia({ video: video, audio: audio })
-        .then(getUserMediaSuccess) //TODO: getUsermediaSuccess
+        .then(getUserMediaSuccess)
         .then((stream) => {})
         .catch((e) => {
           console.log(e);
