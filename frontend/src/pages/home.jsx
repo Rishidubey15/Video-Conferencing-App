@@ -13,7 +13,7 @@ function HomeComponent() {
     const [meetingCode, setMeetingCode] = useState("");
 
 
-    const addToUserHistory = useContext(AuthContext);
+    const {addToUserHistory} = useContext(AuthContext);
     let handleJoinVideoCall = async () => {
         await addToUserHistory(meetingCode)
         navigate(`/${meetingCode}`)
@@ -65,7 +65,7 @@ function HomeComponent() {
                     </div>
                 </div>
                 <div className='rightPanel'>
-                    <img srcSet='/logo3.png' alt="" />
+                    <img src='src/assets/img-for-home.webp' alt="" />
                 </div>
             </div>
         </>
