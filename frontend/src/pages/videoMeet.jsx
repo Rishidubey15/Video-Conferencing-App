@@ -296,26 +296,54 @@ export default function VideoMeetComponent() {
   };
 
   let addMessage = (data, sender, socketIdSender) => {
-    setMessages((prevMessages) => [
-      ...prevMessages,
-      { sender: sender || data.sender, data: data.message || data.data },
-    ]);
-    if (socketIdSender !== socketIdRef.current) {
-      setNewMessages((prevMessages) => prevMessages + 1);
-    }
+    console.log("Adding message attempt:", { data, sender, socketIdSender });
+
+
+    setMessages((prevMessages) => {
+      // Check if this exact message already exists in the last 2 seconds
+      const now = Date.now();
+      const isDuplicate = prevMessages.some(
+        (msg) =>
+          msg.sender === (sender || data.sender) &&
+          msg.data === (data.message || data.data) &&
+          msg.timestamp > now - 2000
+      );
+
+      if (isDuplicate) {
+        console.log("Duplicate message detected, skipping");
+        return prevMessages;
+      }
+
+      const newMessage = {
+        sender: sender || data.sender,
+        data: data.message || data.data,
+        timestamp: now,
+      };
+
+      console.log("Adding new message:", newMessage);
+
+      if (socketIdSender !== socketIdRef.current) {
+        setNewMessages((prev) => prev + 1);
+      }
+
+      return [...prevMessages, newMessage];
+    });
   };
 
   let connectToSocketServer = () => {
     socketRef.current = io.connect(server_url, { secure: false });
 
+    socketRef.current.removeAllListeners();
+
+    socketRef.current.on("chat-message", (data, sender, socketIdSender) => {
+      addMessage(data, sender, socketIdSender);
+    });
+
     socketRef.current.on("signal", gotMessageFromServer);
 
-    socketRef.current.on("connect", () => {
+    socketRef.current.once("connect", () => {
       socketRef.current.emit("join-call", window.location.href, username);
       socketIdRef.current = socketRef.current.id;
-      
-      socketRef.current.off("chat-message"); 
-      socketRef.current.on("chat-message", addMessage);
 
       socketRef.current.on("user-left", (id) => {
         setVideos((videos) => videos.filter((video) => video.socketId !== id));
@@ -324,9 +352,7 @@ export default function VideoMeetComponent() {
       socketRef.current.on("user-joined", (id, clients) => {
         clients.forEach((client) => {
           const { id: socketId, username } = client;
-          connections[socketId] = new RTCPeerConnection(
-            peerConfigConnections
-          );
+          connections[socketId] = new RTCPeerConnection(peerConfigConnections);
           connections[socketId].onicecandidate = (event) => {
             if (event.candidate != null) {
               socketRef.current.emit(
@@ -371,35 +397,12 @@ export default function VideoMeetComponent() {
           if (window.localStream !== undefined && window.localStream !== null) {
             connections[socketId].addStream(window.localStream);
           } else {
-            let blackSilence = (...args)   =>
+            let blackSilence = (...args) =>
               new MediaStream([black(...args), silence()]);
             window.localStream = blackSilence();
-            connections[socketListId].addStream(window.localStream);
+            connections[socketId].addStream(window.localStream);
           }
         });
-
-        // if (id === socketIdRef.current) {
-        //   for (let id2 in connections) {
-        //     if (id2 === socketIdRef.current) continue;
-
-        //     try {
-        //       connections[id2].addStream(window.localStream);
-        //     } catch (error) {}
-
-        //     connections[id2].createOffer().then((description) => {
-        //       connections[id2]
-        //         .setLocalDescription(description)
-        //         .then(() => {
-        //           socketRef.current.emit(
-        //             "signal",
-        //             id2,
-        //             JSON.stringify({ sdp: connections[id2].localDescription })
-        //           );
-        //         })
-        //         .catch((e) => console.log(e));
-        //     });
-        //   }
-        // }
       });
     });
   };
@@ -430,7 +433,7 @@ export default function VideoMeetComponent() {
     if (video) {
       // Turn off video
       setVideo(false);
-  
+
       // Stop the video track
       let videoTrack = window.localStream
         ?.getVideoTracks()
@@ -439,15 +442,15 @@ export default function VideoMeetComponent() {
         videoTrack.stop();
         window.localStream.removeTrack(videoTrack);
       }
-  
+
       // Replace with a black screen
       let blackScreenTrack = black();
       window.localStream.addTrack(blackScreenTrack);
-  
+
       // Update the local video element to display the black screen
       localVideoRef.current.srcObject = null; // Clear the current stream
       localVideoRef.current.srcObject = window.localStream;
-  
+
       // Update the stream for all connections
       for (let id in connections) {
         let sender = connections[id]
@@ -458,10 +461,8 @@ export default function VideoMeetComponent() {
         }
       }
     } else {
-      // Turn on video
       setVideo(true);
-  
-      // Restart the video stream
+
       navigator.mediaDevices
         .getUserMedia({ video: true })
         .then((stream) => {
@@ -469,18 +470,16 @@ export default function VideoMeetComponent() {
           let oldBlackTrack = window.localStream
             ?.getVideoTracks()
             ?.find((track) => track.label === "black");
-  
+
           if (oldBlackTrack) {
             window.localStream.removeTrack(oldBlackTrack);
           }
-  
+
           window.localStream.addTrack(videoTrack);
-  
-          // Update the local video element to display the video stream
-          localVideoRef.current.srcObject = null; // Clear the current stream
+
+          localVideoRef.current.srcObject = null;
           localVideoRef.current.srcObject = window.localStream;
-  
-          // Update the stream for all connections
+
           for (let id in connections) {
             let sender = connections[id]
               .getSenders()
@@ -493,7 +492,6 @@ export default function VideoMeetComponent() {
         .catch((e) => console.log(e));
     }
   };
-  
 
   let handleAudio = () => {
     setAudio(!audio);
@@ -512,8 +510,14 @@ export default function VideoMeetComponent() {
   let routeTo = useNavigate();
 
   let sendMessage = () => {
-    socketRef.current.emit("chat-message", {message, sender: username});
-    setMessage("");
+    if (message.trim()) {
+      const messageData = {
+        message: message.trim(),
+        sender: username,
+      };
+      socketRef.current.emit("chat-message", messageData);
+      setMessage("");
+    }
   };
 
   let handleEndCall = () => {
@@ -526,7 +530,7 @@ export default function VideoMeetComponent() {
 
     setMessages([]);
 
-    window.location.href = "/"
+    window.location.href = "/";
   };
 
   let openChat = () => {
@@ -550,7 +554,7 @@ export default function VideoMeetComponent() {
     <div>
       {askForUsername === true ? (
         <div className={styles.LobbyContainer}>
-          <h2 >Enter the lobby</h2>
+          <h2>Enter the lobby</h2>
           <hr />
           <div className={styles.LobbyButtons}>
             <TextField
@@ -566,7 +570,7 @@ export default function VideoMeetComponent() {
           </div>
           <div>
             <video
-              style={{ borderRadius: "10px", marginTop: "10px"}}
+              style={{ borderRadius: "10px", marginTop: "10px" }}
               ref={localVideoRef}
               autoPlay
               muted
@@ -578,8 +582,10 @@ export default function VideoMeetComponent() {
           {showModal ? (
             <div className={styles.chatRoom}>
               <div className={styles.chatContainer}>
-                <h1 style={{textAlign: "center", marginBottom: "10px"}}>Chat</h1>
-                <hr style={{marginBottom: "10px"}}/>
+                <h1 style={{ textAlign: "center", marginBottom: "10px" }}>
+                  Chat
+                </h1>
+                <hr style={{ marginBottom: "10px" }} />
                 <div className={styles.chattingDisplay}>
                   {messages.length > 0 ? (
                     messages.map((item, index) => {
@@ -604,9 +610,17 @@ export default function VideoMeetComponent() {
                     onChange={(e) => {
                       setMessage(e.target.value);
                     }}
-                    style={{marginBottom: "1rem", marginRight: "20px", width: "22vw"}}
+                    style={{
+                      marginBottom: "1rem",
+                      marginRight: "20px",
+                      width: "22vw",
+                    }}
                   />
-                  <Button variant="contained" onClick={sendMessage} style={{marginBottom: "15px"}}>
+                  <Button
+                    variant="contained"
+                    onClick={sendMessage}
+                    style={{ marginBottom: "15px" }}
+                  >
                     Send
                   </Button>
                 </div>
@@ -650,21 +664,22 @@ export default function VideoMeetComponent() {
               </IconButton>
             </Badge>
           </div>
-            
-            <div className={styles.videoContainer}>
-              <video
+
+          <div className={styles.videoContainer}>
+            <video
               className={styles.meetUserVideo}
               ref={localVideoRef}
               autoPlay
               muted
-              ></video>
-               <p style={{color: "white", textAlign: "center"}}>{username || "You"}</p>
-            </div>
-          
+            ></video>
+            <p style={{ color: "white", textAlign: "center" }}>
+              {username || "You"}
+            </p>
+          </div>
+
           <div className={styles.conferenceView}>
             {videos.map((video) => (
               <div key={video.socketId} className={styles.videoContainerOthers}>
-                
                 <video
                   data-socket={video.socketId}
                   ref={(ref) => {
@@ -680,7 +695,9 @@ export default function VideoMeetComponent() {
                   autoPlay
                 ></video>
 
-                <p style={{color: "white"}}>{video.username || "Participant"}</p>
+                <p style={{ color: "white" }}>
+                  {video.username || "Participant"}
+                </p>
               </div>
             ))}
           </div>
