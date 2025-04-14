@@ -58,7 +58,11 @@
     color: white;
     border-radius: 10px;
     padding: 0.5rem 2.2rem;
+}
+
+.navRightPart .btn:hover{
     cursor: pointer;
+    background-color: rgb(173, 94, 3);
 }
 
 .mainPage{
@@ -100,6 +104,13 @@
     border: none;
     border-radius: 8px;
     font-weight: 400;
+    
+}
+
+.leftMainPage-btn:hover{
+    cursor: pointer;
+    background-color: rgb(173, 94, 3);
+
 }
 
 .leftMainPage-btn a{
@@ -121,15 +132,20 @@
     align-items: center;
     justify-content: space-between;
     padding-inline: 20px;
+    padding-top: 10px;
     text-align: center;
-  
+    font-family: "Roboto", sans-serif;
   }
+
+
+
   .meetContainer {
     display: flex;
     padding-inline: 20px;
     height: 80vh;
     gap: 10vw;
     justify-content: center;
+    font-family: "Roboto", sans-serif;
   }
   
   
@@ -137,8 +153,17 @@
   .leftPanel {
     height: 100%;
     display: flex;
-    align-items: center;
-  
+    flex-direction: column;
+    gap: 20px;
+    align-items: left;
+    justify-content: center;
+
+  }
+
+  .meetingCodeJoinButton{
+    width: 100px;
+    height: 40px;
+    align-self: center;
   }
   
   .rightPanel {
