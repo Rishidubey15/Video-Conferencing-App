@@ -34,9 +34,3 @@ function App() {
 
 export default App;
 
-
-// TODO
-// 1. Two users join two different meetings then chat feature doesn't work
-// 2. Video on/off works for others but not for the user who turned it off/on
-// Done 3. Senders name is not available if the messages are sent before a new user joins
-// 4. User's name must be already there if he is logged in.
