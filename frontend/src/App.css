@@ -41,7 +41,7 @@
     cursor: pointer;
 }
 
-.navRightPart{
+.navRightPart {
     display: flex;
     align-items: center;
 }
@@ -176,3 +176,16 @@
     height: auto;
     border-radius: 20px;
   }
+
+.user-welcome {
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-right: 20px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.user-welcome span {
+    font-weight: 600;
+}

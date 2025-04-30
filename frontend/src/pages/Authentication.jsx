@@ -40,14 +40,14 @@
       try {
         if (formState === 0) {
           let result = await handleLogin(username, password);
-          console.log(result);
+          console.log("Login result:", result);
           setMessage(result.message || "Login Successful");
           setUsername("");
           setOpen(true);
           setError("");
           setFormState(0);
           setPassword("");
-          navigate("/home");
+          navigate("/");
         }
         if (formState === 1) {
           let result = await handleRegister(name, username, password);
@@ -58,10 +58,11 @@
           setError("");
           setFormState(0);
           setPassword("");
-          navigate("/home");
+          navigate("/");
         }
       } catch (error) {
         let message = error.response.data.message;
+        
         setError(message);
       }
     };

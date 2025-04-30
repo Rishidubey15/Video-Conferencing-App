@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import io from "socket.io-client";
 import { Badge, IconButton, TextField } from "@mui/material";
@@ -12,6 +12,7 @@ import MicOffIcon from "@mui/icons-material/MicOff";
 import ScreenShareIcon from "@mui/icons-material/ScreenShare";
 import StopScreenShareIcon from "@mui/icons-material/StopScreenShare";
 import ChatIcon from "@mui/icons-material/Chat";
+import { AuthContext } from "../contexts/AuthContext";
 
 const server_url = "http://localhost:8000";
 var connections = {};
@@ -20,6 +21,7 @@ const peerConfigConnections = {
 };
 
 export default function VideoMeetComponent() {
+  const { userData } = useContext(AuthContext);
   var socketRef = useRef();
   var socketIdRef = useRef();
   let localVideoRef = useRef();
@@ -34,20 +36,22 @@ export default function VideoMeetComponent() {
   let [messages, setMessages] = useState([]);
   let [message, setMessage] = useState("");
   let [newMessages, setNewMessages] = useState(0);
-  let [askForUsername, setAskForUsername] = useState(true);
-  let [username, setUsername] = useState("");
+  let [username, setUsername] = useState(localStorage.getItem("username") || "");
+  let [askForUsername, setAskForUsername] = useState(!localStorage.getItem("username"));
   const videoRef = useRef([]);
   let [videos, setVideos] = useState([]);
-
-  //Todo
-  // if(isChrome() === false){
-
-  // }
 
   useEffect(() => {
     console.log("Permission taken");
     getPermissions();
   });
+
+  useEffect(() => {
+    // If user is logged in, automatically connect
+    if (localStorage.getItem("username")) {
+      getMedia();
+    }
+  }, []);
 
   let getDisplayMedia = () => {
     if (screen) {
@@ -298,7 +302,6 @@ export default function VideoMeetComponent() {
   let addMessage = (data, sender, socketIdSender) => {
     console.log("Adding message attempt:", { data, sender, socketIdSender });
 
-
     setMessages((prevMessages) => {
       // Check if this exact message already exists in the last 2 seconds
       const now = Date.now();
@@ -430,66 +433,63 @@ export default function VideoMeetComponent() {
   };
 
   let handleVideo = () => {
+    setVideo(!video);
     if (video) {
-      // Turn off video
-      setVideo(false);
-
-      // Stop the video track
-      let videoTrack = window.localStream
-        ?.getVideoTracks()
-        ?.find((track) => track.kind === "video");
-      if (videoTrack) {
-        videoTrack.stop();
-        window.localStream.removeTrack(videoTrack);
-      }
-
-      // Replace with a black screen
-      let blackScreenTrack = black();
-      window.localStream.addTrack(blackScreenTrack);
-
-      // Update the local video element to display the black screen
-      localVideoRef.current.srcObject = null; // Clear the current stream
-      localVideoRef.current.srcObject = window.localStream;
-
-      // Update the stream for all connections
-      for (let id in connections) {
-        let sender = connections[id]
-          .getSenders()
-          .find((s) => s.track?.kind === "video");
-        if (sender) {
-          sender.replaceTrack(blackScreenTrack);
-        }
+      // Turning video off
+      try {
+        let tracks = localVideoRef.current.srcObject.getVideoTracks();
+        tracks.forEach((track) => {
+          track.enabled = false;
+        });
+      } catch (error) {
+        console.log(error);
       }
     } else {
-      setVideo(true);
-
-      navigator.mediaDevices
-        .getUserMedia({ video: true })
-        .then((stream) => {
-          let videoTrack = stream.getVideoTracks()[0];
-          let oldBlackTrack = window.localStream
-            ?.getVideoTracks()
-            ?.find((track) => track.label === "black");
-
-          if (oldBlackTrack) {
-            window.localStream.removeTrack(oldBlackTrack);
-          }
-
-          window.localStream.addTrack(videoTrack);
-
-          localVideoRef.current.srcObject = null;
-          localVideoRef.current.srcObject = window.localStream;
-
-          for (let id in connections) {
-            let sender = connections[id]
-              .getSenders()
-              .find((s) => s.track?.kind === "video");
-            if (sender) {
-              sender.replaceTrack(videoTrack);
+      // Turning video on
+      if (videoAvailable) {
+        navigator.mediaDevices
+          .getUserMedia({ video: true, audio: audio })
+          .then((stream) => {
+            try {
+              // Stop existing tracks
+              let tracks = localVideoRef.current.srcObject.getTracks();
+              tracks.forEach((track) => track.stop());
+            } catch (error) {
+              console.log(error);
             }
-          }
-        })
-        .catch((e) => console.log(e));
+
+            window.localStream = stream;
+            localVideoRef.current.srcObject = stream;
+
+            // Update all peer connections
+            for (let id in connections) {
+              if (id === socketIdRef.current) continue;
+
+              // Remove old stream
+              connections[id].removeStream(window.localStream);
+              
+              // Add new stream
+              connections[id].addStream(window.localStream);
+
+              // Create and send new offer
+              connections[id].createOffer().then((description) => {
+                connections[id]
+                  .setLocalDescription(description)
+                  .then(() => {
+                    socketRef.current.emit(
+                      "signal",
+                      id,
+                      JSON.stringify({ sdp: connections[id].localDescription })
+                    );
+                  })
+                  .catch((e) => console.log(e));
+              });
+            }
+          })
+          .catch((e) => {
+            console.log(e);
+          });
+      }
     }
   };
 
@@ -545,9 +545,12 @@ export default function VideoMeetComponent() {
   };
 
   let connect = () => {
+    if (username.trim() === "") {
+      alert("Please enter a username");
+      return;
+    }
     setAskForUsername(false);
     getMedia();
-    socketRef.current.emit("join-call", window.location.href, username);
   };
 
   return (
@@ -688,8 +691,8 @@ export default function VideoMeetComponent() {
                     }
                   }}
                   style={{
-                    width: "10vw",
-                    height: "150px",
+                    width: "20vw",
+                    height: "250px",
                     borderRadius: "5px",
                   }}
                   autoPlay

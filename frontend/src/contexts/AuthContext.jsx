@@ -39,11 +39,14 @@ export const AuthProvider = ({children}) => {
                 password: password
             })
 
-            console.log(request)
+            console.log("Login response:", request.data)
 
             if(request.status == httpStatus.OK){
                 localStorage.setItem("token", request.data.token)
-                return request.data.message;
+                localStorage.setItem("username", request.data.name)
+                console.log("Stored username:", request.data.name)
+
+                return request.data;
             }
         } catch (error) {
             throw error;   
@@ -52,16 +55,19 @@ export const AuthProvider = ({children}) => {
     
     const getHistoryOfUser = async () => {
         try {
-            let request = await client.get("/get_all_activity", {
-                params: {
-                    token: localStorage.getItem("token")
-                }
-            });
-            return request.data
+          const token = localStorage.getItem("token");
+          if (!token) {
+            throw new Error("No token found");
+          }
+      
+          const response = await client.get(`/get_all_activity?token=${token}`);
+          console.log("History API response:", response.data);
+          return response.data;
         } catch (error) {
-            throw error;
+          console.error("Error fetching user history:", error);
+          throw error;
         }
-    }
+      };
 
     const addToUserHistory = async (meetingCode) => {
         try {

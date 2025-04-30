@@ -1,6 +1,7 @@
 .meetVideoContainer {
   position: relative;
   height: 100vh;
+  overflow-y: hidden;
   background: rgb(1, 4, 48);
 }
 
@@ -13,8 +14,8 @@
 .videoContainer {
   font-family: "Roboto", sans-serif;
   position: absolute;
-  bottom: 1vh;
-  height: 27vh;
+  bottom: 3vh;
+  height: 20vh;
   left: 0;
   /* border: 2px solid #22da25; */
   border-radius: 10px;
@@ -27,7 +28,7 @@
 .videoContainerOthers {
   border: 2px solid #2196f3;
   border-radius: 10px;
-  padding: 10px;
+  /* padding: 10  px; */
   background-color: #222;
   text-align: center;
   color: white;

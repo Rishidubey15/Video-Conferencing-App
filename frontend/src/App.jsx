@@ -6,6 +6,8 @@ import "@fontsource/roboto";
 import { AuthProvider } from "./contexts/AuthContext";
 import VideoMeetComponent from "./pages/videoMeet";
 import HomeComponent from "./pages/home";
+import History from "./pages/history";
+
 
 function App() {
   return (
@@ -13,13 +15,14 @@ function App() {
       <Router>
         <AuthProvider>
           <Routes>
-            {/* <Route path = "/home" element= {}></Route> */}
             <Route path="/" element={<LandingPage />}></Route>
             <Route path="/auth" element={<Authentication />}>
               {" "}
             </Route>
             
             <Route path="/home" element={<HomeComponent />} />
+            <Route path="/history" element={<History />} />
+
 
             <Route path="/:url" element={<VideoMeetComponent />} />
           </Routes>
