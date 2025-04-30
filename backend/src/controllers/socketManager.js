@@ -2,7 +2,8 @@ import { Server } from "socket.io"
 
 let connections = {}; 
 let messages = {}; 
-let timeOnline = {}; 
+let timeOnline = {};
+let userNames = {}; 
 
 export const connectToSocket = (server) => {
     const io = new Server(server, {
@@ -13,24 +14,31 @@ export const connectToSocket = (server) => {
             credentials: true
         }
     });
+
     io.on("connection", (socket) => {
         console.log("Someone connected")
-        socket.on("join-call", (path) => {
+        socket.on("join-call", (path, username) => {
             if(connections[path] === undefined){
                 connections[path] = [];
             }
 
             connections[path].push(socket.id);
+            userNames[socket.id] = username;
             timeOnline[socket.id] = new Date();
 
             for(let a = 0; a<connections[path].length;a++){
-                io.to(connections[path][a]).emit("user-joined", socket.id, connections[path]);
+                io.to(connections[path][a]).emit("user-joined", socket.id,
+                connections[path].map((id) => ({ id, username: userNames[id] })) // Send usernames
+                );
             }
 
             if(messages[path] !== undefined){
                 for(let a = 0; a<messages[path].length;a++){
-                    io.to(socket.id).emit("chat-message", messages[path][a]['data']);
-                    messages[path][a]['sender'], messages[path][a]['socket-id-sender']
+                    io.to(socket.id).emit("chat-message", 
+                    messages[path][a]['data'],
+                    messages[path][a]['sender'], 
+                    messages[path][a]['socket-id-sender']
+                    );
                 }
             }
         })
@@ -40,29 +48,35 @@ export const connectToSocket = (server) => {
         })
 
         socket.on("chat-message", (data, sender) => {
-            const [matchingRoom, found] = Object.entries(connections)
-            .reduce(([room, isFound], [roomKey, roomValue]) => {
-                
-                if(!isFound && roomValue.includes(socket.id)){
-                    return [roomKey, true]
+            console.log("Received message:", data, "from:", sender); // Debugging log
+        
+            const [matchingRoom, found] = Object.entries(connections).reduce(
+                ([room, isFound], [roomKey, roomValue]) => {
+                    if (!isFound && roomValue.includes(socket.id)) {
+                        return [roomKey, true];
+                    }
+                    return [room, isFound];
+                },
+                ['', false]
+            );
+        
+            if (found === true) {
+                if (messages[matchingRoom] === undefined) {
+                    messages[matchingRoom] = [];
                 }
-            }, ['', false])
-
-            if(found === true){
-                if(messages[matchingRoom] === undefined){
-                    messages[matchingRoom] = []
-                }
-
-                messages[matchingRoom].push({'sender': sender, 'data': data, "socket-id-sender": socket.id})
-                console.log("message", matchingRoom, ":", sender, data);
-
+        
+                messages[matchingRoom].push({ sender: sender, data: data, "socket-id-sender": socket.id });
+                console.log("Broadcasting message:", data, "from sender:", sender); // Debugging log
+        
                 connections[matchingRoom].forEach((elem) => {
-                    io.to(elem).emit("chat-message", data, sender, socket.id)
-                })
+                    io.to(elem).emit("chat-message", data, sender, socket.id);
+                });
             }
-        })
+        });
+
 
         socket.on("disconnect", () => {
+            console.log("Someone disconnected");
             var diffTime = Math.abs(timeOnline[socket.id] - new Date())
             var key
             for(const[k,v] of JSON.parse(JSON.stringify(Object.entries(connections)))){
@@ -83,6 +97,7 @@ export const connectToSocket = (server) => {
                     }
                 }
             }
+            delete userNames[socket.id];
         })
     })
 }
