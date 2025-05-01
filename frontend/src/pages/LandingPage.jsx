@@ -1,8 +1,12 @@
 import React from 'react'
 import '../App.css'
-import { Button, Link } from "@mui/material";
-import { useNavigate } from "react-router-dom";
-
+import { useNavigate } from "react-router-dom"
+import DuoOutlinedIcon from '@mui/icons-material/DuoOutlined';
+import SpaceDashboardIcon from '@mui/icons-material/SpaceDashboard';
+import ExitToAppOutlinedIcon from '@mui/icons-material/ExitToAppOutlined';
+import PersonAddOutlinedIcon from '@mui/icons-material/PersonAddOutlined';
+import LoginOutlinedIcon from '@mui/icons-material/LoginOutlined';
+import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined';
 
 
 export default function LandingPage() {
@@ -35,6 +39,7 @@ export default function LandingPage() {
       <div className="landingPageContainer">
         <nav className="navbar">
           <div className="navLeftPart">
+            <DuoOutlinedIcon style={{fontSize: "2rem", color: "orange"}}/>
             <h2>EchoMeet</h2>
           </div>
 
@@ -43,19 +48,35 @@ export default function LandingPage() {
           checkLoggedIn() ?
 
           <div className="navRightPart">
-            <p className='navRightPart-element user-welcome'>Welcome, 
-              <span>{localStorage.getItem("username")}</span> 
-              
-            </p>
-            <button className='navRightPart-element btn' onClick={handleLogout}>Logout</button>
+            <div style={{display: "flex", alignItems: "center"}}>
+              <SpaceDashboardIcon style = {{fontSize: "1.5rem", color: "#00ccff"}}/>
+              <p className='navRightPart-element btn-dashboard' onClick={goToHome}>Dashboard</p>
+            </div>
+
+            <button className='navRightPart-element btn' onClick={handleLogout}
+            style={{display: "flex", alignItems: "center", gap: "5px"}}>Logout
+               <ExitToAppOutlinedIcon style={{fontSize: "1.5rem", padding: "0"}}/>
+            </button>
           </div> 
           
           :
           
           <div className="navRightPart">
-            <p className='navRightPart-element' onClick={goToHome}>Join as guest</p>
-            <p className='navRightPart-element' onClick={goToRegister}>Register</p>
-            <button className='navRightPart-element btn' onClick={goToLogin}>Login</button>
+            <div style={{display: "flex", alignItems: "center"}}>
+              <GroupsOutlinedIcon style={{fontSize: "1.5rem", color: "#00ccff"}}/>
+              <p className='navRightPart-element' onClick={goToHome}>Join as guest</p>
+            </div>
+
+            <div style={{display: "flex", alignItems: "center"}}>
+              <PersonAddOutlinedIcon style={{fontSize: "1.5rem", color: "#ff8f00"}}/>
+              <p className='navRightPart-element' onClick={goToRegister}>Register</p>
+            </div>
+
+            <button className='navRightPart-element btn' onClick={goToLogin}
+            style={{display: "flex", alignItems: "center", gap: "5px"}}>
+              Login
+              <LoginOutlinedIcon style={{fontSize: "1.5rem", padding: "0"}}/>
+            </button>
           </div>
         }
           
@@ -65,7 +86,14 @@ export default function LandingPage() {
           <div className="leftMainPage">
             <h2 className='leftMainPage-heading'><span style={{color: "orange"}}>Connect</span> with your Loved Ones</h2>
             <p className='leftMainPage-subHeading'>Cover a distance by EchoMeet</p>
-            <button className='leftMainPage-btn' onClick={goToHome}>Get Started</button>
+
+            {
+            checkLoggedIn() ? (<p className='user-welcome'>Welcome, 
+            <span>{localStorage.getItem("username")}</span> 
+          </p>) : <></>
+          }
+            
+
           </div>
           <div className="rightMainPage">
             <img src="src\assets\Main-page-video-call.png" alt="image loading.." />

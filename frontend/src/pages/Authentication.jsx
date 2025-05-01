@@ -47,7 +47,7 @@
           setError("");
           setFormState(0);
           setPassword("");
-          navigate("/");
+          navigate("/home");
         }
         if (formState === 1) {
           let result = await handleRegister(name, username, password);
@@ -58,7 +58,7 @@
           setError("");
           setFormState(0);
           setPassword("");
-          navigate("/");
+          navigate("/home");
         }
       } catch (error) {
         let message = error.response.data.message;
