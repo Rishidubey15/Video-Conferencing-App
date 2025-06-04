@@ -52,8 +52,8 @@ const login = async (req, res) => {
     
     let token = crypto.randomBytes(20).toString("hex");
     user.token = token;
-    res.status(200).json({ message: "Login successful", token, name: user.name });
     await user.save();
+    res.status(200).json({ message: "Login successful", token, name: user.name });
   } catch (e) {
     return res.status(500).json({ message: `Something went wrong${e}` });
   }

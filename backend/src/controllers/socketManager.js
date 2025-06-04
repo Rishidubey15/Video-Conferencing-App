@@ -5,6 +5,7 @@ let messages = {};
 let timeOnline = {};
 let userNames = {}; 
 
+
 export const connectToSocket = (server) => {
     const io = new Server(server, {
         cors: {
@@ -14,6 +15,8 @@ export const connectToSocket = (server) => {
             credentials: true
         }
     });
+
+    
 
     io.on("connection", (socket) => {
         console.log("Someone connected")
@@ -28,7 +31,7 @@ export const connectToSocket = (server) => {
 
             for(let a = 0; a<connections[path].length;a++){
                 io.to(connections[path][a]).emit("user-joined", socket.id,
-                connections[path].map((id) => ({ id, username: userNames[id] })) // Send usernames
+                connections[path].map((id) => ({ id, username: userNames[id] })) 
                 );
             }
 

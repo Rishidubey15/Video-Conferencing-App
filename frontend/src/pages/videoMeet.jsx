@@ -13,9 +13,12 @@ import ScreenShareIcon from "@mui/icons-material/ScreenShare";
 import StopScreenShareIcon from "@mui/icons-material/StopScreenShare";
 import ChatIcon from "@mui/icons-material/Chat";
 import { AuthContext } from "../contexts/AuthContext";
+import SpeakerNotesOffIcon from '@mui/icons-material/SpeakerNotesOff';
 
-const server_url = "http://localhost:8000";
+const server_url = "http://192.168.29.80:8000";
+
 var connections = {};
+
 const peerConfigConnections = {
   iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
 };
@@ -663,7 +666,7 @@ export default function VideoMeetComponent() {
                 onClick={() => setModal(!showModal)}
                 style={{ color: "white" }}
               >
-                <ChatIcon />{" "}
+              { showModal === true ? <><ChatIcon />{" "}</> : <SpeakerNotesOffIcon/>}
               </IconButton>
             </Badge>
           </div>
