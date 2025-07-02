@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import { useContext, useState } from "react";
 import withAuth from "../utils/withAuth";
 import { useNavigate } from "react-router-dom";
 import "../App.css";
@@ -118,7 +118,7 @@ function HomeComponent() {
           )}
         </div>
         <div className="home-rightPanel">
-          <img src="src/assets/img-for-home.webp" alt="Video call illustration" />
+          <img src="/img-for-home.webp" alt="Video call illustration" />
         </div>
       </div>
     </>
