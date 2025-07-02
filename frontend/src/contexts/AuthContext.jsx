@@ -3,6 +3,8 @@ import httpStatus from "http-status";
 import { useNavigate } from "react-router-dom";
 import { createContext, useContext, useState } from "react";
 import { server } from "../environment";
+import PropTypes from "prop-types";
+
 
 export const AuthContext = createContext({});
 
@@ -28,7 +30,8 @@ export const AuthProvider = ({children}) => {
                 return request.data.message;
             }
         } catch (error) {
-            throw error;   
+            console.error("Registration failed:", error);
+            throw error;
         }
     }
 
@@ -50,6 +53,7 @@ export const AuthProvider = ({children}) => {
                 return request.data;
             }
         } catch (error) {
+            console.error("Login failed:", error);
             throw error;   
         }
     }
@@ -78,11 +82,14 @@ export const AuthProvider = ({children}) => {
             });
             return request
         } catch (error) {
+            console.error("Error adding to user history:", error);
             throw error;
         }
     }
 
     const router = useNavigate();
+    router("/dashboard"); // or your intended route
+
     
     const data = {
         userData, setUserData,addToUserHistory, getHistoryOfUser, handleRegister, handleLogin
@@ -91,5 +98,8 @@ export const AuthProvider = ({children}) => {
     return(
         <AuthContext.Provider value = {data}>{children}</AuthContext.Provider>
     )
-
 }
+
+AuthProvider.propTypes = {
+  children: PropTypes.node.isRequired
+};
