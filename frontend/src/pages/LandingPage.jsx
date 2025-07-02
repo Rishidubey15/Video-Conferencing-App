@@ -1,4 +1,3 @@
-import React from 'react'
 import '../App.css'
 import { useNavigate } from "react-router-dom"
 import DuoOutlinedIcon from '@mui/icons-material/DuoOutlined';
@@ -96,7 +95,7 @@ export default function LandingPage() {
 
           </div>
           <div className="rightMainPage">
-            <img src="src\assets\Main-page-video-call.png" alt="image loading.." />
+            <img src="Main-page-video-call.png" alt="image loading.." />
           </div>
         </div>
       </div>
