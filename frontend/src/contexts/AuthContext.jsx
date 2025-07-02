@@ -30,6 +30,7 @@ export const AuthProvider = ({children}) => {
             console.log(request);
 
             if(request.status == httpStatus.CREATED){
+                await handleLogin(username, password);
                 return request.data.message;
             }
         } catch (error) {
