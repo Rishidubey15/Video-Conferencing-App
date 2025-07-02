@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useContext } from "react";
+import { useEffect, useRef, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import io from "socket.io-client";
 import { Badge, IconButton, TextField } from "@mui/material";
@@ -14,9 +14,8 @@ import StopScreenShareIcon from "@mui/icons-material/StopScreenShare";
 import ChatIcon from "@mui/icons-material/Chat";
 import { AuthContext } from "../contexts/AuthContext";
 import SpeakerNotesOffIcon from '@mui/icons-material/SpeakerNotesOff';
-import {server} from "..environment.js"
 
-const server_url = `${server}`;
+const server_url = `https://video-conferencing-app-uze9.onrender.com`;
 
 var connections = {};
 
