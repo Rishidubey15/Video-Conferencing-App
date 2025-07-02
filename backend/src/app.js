@@ -19,12 +19,15 @@ app.use(express.urlencoded({limit: "40kb", extended: true}))
 app.use("/api/v1/users", userRoutes);
 
 const start = async () => {
-  const connectionDb = awaitmongoose.connect(process.env.MONGODB_URI, {
+  const connectionDb = await mongoose.connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     ssl: true, // Ensure SSL is on
     tlsAllowInvalidCertificates: false,
-  });;
+  });
+
+  mongoose.set("debug", true);
+
   console.log(`Connected to mongodb: ${connectionDb}`);
   server.listen(app.get("port"), () => {
     console.log(`Server is running on port ${app.get("port")}`);
