@@ -16,6 +16,9 @@ export const AuthProvider = ({children}) => {
     const authContext = useContext(AuthContext);
     const[userData, setUserData] = useState(authContext);
 
+    // const router = useNavigate();
+
+
     const handleRegister = async(name, username, password) => 
         {
         try {
@@ -86,10 +89,6 @@ export const AuthProvider = ({children}) => {
             throw error;
         }
     }
-
-    const router = useNavigate();
-    router("/dashboard"); // or your intended route
-
     
     const data = {
         userData, setUserData,addToUserHistory, getHistoryOfUser, handleRegister, handleLogin
